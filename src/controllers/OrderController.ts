@@ -6,6 +6,22 @@ import Order from '../models/order';
 const { STRIPE_API_KEY, FRONTEND_URL, STRIPE_WEBHOOK_SECRET } = process.env;
 const STRIPE = new Stripe(STRIPE_API_KEY as string);
 
+const getMyOrders = async (req: Request, res: Response) => {
+	try {
+		const orders = await Order.find({ user: req.userId })
+			.populate('restaurant')
+			.populate('user');
+
+		return res.json(orders);
+	} catch (error) {
+		console.error(error);
+		res.status(500).json({
+			message:
+				'Internal Server Error: An unexpected error occurred while processing your request. Please try again later.',
+		});
+	}
+};
+
 type CheckoutSessionRequest = {
 	cartItems: {
 		menuItemId: string;
@@ -161,6 +177,7 @@ const createSession = async (
 };
 
 export default {
+	getMyOrders,
 	stripeWebhookHandler,
 	createCheckoutSession,
 };
